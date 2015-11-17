@@ -1,0 +1,336 @@
+<html lang="en">
+<head>
+  <title>BigSense for DB Systel GmbH (Cooperation with TK)</title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+  <script src="http://cdn.sockjs.org/sockjs-0.3.4.min.js"></script>
+  <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+  <script src="vertxbus.js"></script>
+  <script src="visualization.js"></script>
+  
+  <!-- Bootstrap CSS served from a CDN -->
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+<div style="display:none; position: relative; top: 50%; -webkit-transform: translateY(-50%); -ms-transform: translateY(-50%); transform: translateY(-50%);line-height:300%;" class="container" id="login-container">
+	<div class="row" style="text-align: center;">
+		<div id="login" >
+		  <form onsubmit="return false;">
+		  	<img src="logo.png" alt="Logo" style="height:140px; display: block; margin-left: auto; margin-right: auto ">
+  			<br>
+  			<br>
+		    <input style="font-size:x-large; margin: 5px;" type="text" placeholder="Username" id="loginUser" value=""/>
+		    <br>
+		    <input style="font-size:x-large; margin: 5px;" type="text" placeholder="Password" id="loginPassword" value=""/>
+		    <br>
+		    <input style="font-size:x-large; margin: 5px;" type="button" class="btn btn-default" id="loginButton" value="Login"/>
+		  </form>
+		</div>
+	</div>
+</div>
+
+<div class="container" id="content" style="visibility:hidden;">
+  <br>
+  <div class="row" id="logout" style="text-align: right;">
+	<form onsubmit="return false;">
+		<input style="font-size:x-large;" type="button" class="btn btn-default" id="logoutButton" value="Logout"/>
+	</form>
+  </div>
+  <img src="logo.png" alt="Logo" style="height:140px; display: block; margin-left: auto; margin-right: auto ">
+  <br>
+  <ul class="nav nav-pills nav-justified">
+    <li style="font-size: x-large;" class="active"><a data-toggle="tab" href="#files">APKs</a></li>
+    <li style="font-size: x-large;" ><a data-toggle="tab" href="#appstab">Apps</a></li>
+    <li style="font-size: x-large;" ><a data-toggle="tab" href="#phonestab">Phones</a></li>
+    <li style="font-size: x-large;" ><a data-toggle="tab" href="#groupstab">Groups</a></li>
+    <li style="font-size: x-large;" ><a data-toggle="tab" href="#logstab">Logs</a></li>
+  </ul>
+
+  <div class="tab-content">
+    <div id="files" class="tab-pane fade in active">
+     	<div class="row">
+     		<br>
+    		<br>
+			<div id="upload">
+	    	</div>
+		    <input type="file" class="btn btn-default" id="apkFiles" name="files[]" multiple />
+		    <div id="progress"></div>
+		    <br><br>
+		</div>
+	    <div class="row" id="apks">
+	    </div>
+    </div>
+    <div id="appstab" class="tab-pane fade">
+    	<br>
+    	<br>
+    	<div id="apps">
+    	</div>
+    </div>
+    <div id="phonestab" class="tab-pane fade">
+    	<br>
+    	<br>
+    	<div id="phones">
+    	</div>
+    </div>
+    <div id="groupstab" class="tab-pane fade">
+    	<br>
+    	<br>
+    	<div id="groups">
+	    </div>
+    	<br>
+	    <div class="row">
+		    <form onsubmit="return false;">
+			    <input type="text" placeholder="New Group" id="groupName" value=""/>
+			    <input type="button" class="btn btn-default" id="createButton" value="Create"/>
+		  	</form>
+		    <br><br>
+		</div>
+    </div>
+    <div id="logstab" class="tab-pane fade">
+    	<br>
+    	<br>
+    	<div id="logs">
+    	</div>
+    </div>
+  </div>
+</div>
+
+<script>
+var eb = null;
+var editorWindow = null;
+var mongoWindow = null;
+  
+function onLogin(){
+  eb.register("web.out.apk", function(msg){
+    if(msg.action === "files changed"){
+      var files = msg.files;
+      
+      for(var i = 0, f; f = files[i]; i++){
+        files[i]["delete"] = "<a style=\"color:red;\" href='#' onclick=deleteApk('"+f.filename+"')>Delete</a>"
+        files[i]["filename"] = "<h4>" + files[i]["filename"] + "</h4>";
+      }
+      
+      big.vis.tabulate("apks", files, ["<h3>APK-Files</h3>","<h3>Actions</h3>"]);
+    }
+  });
+  
+  big.vis.tabulate("upload", upload, ["<h3>Upload APKs</h3>"]);
+  
+  eb.register("web.out.modules", function(msg){
+    var apps = msg.apps;
+    big.vis.tabulate("apps", apps, ["<h3>Package</h3>","<h3>Last Change</h3>","<h3>Involved Groups</h3>","<h3>Remaining Groups</h3>","","<h3>Actions</h3>"]);
+  });
+  
+  eb.register("web.out.phones", function(msg){
+    var phones = msg.phones;
+    big.vis.tabulate("phones", phones, ["<h3>IMEI</h3>","<h3>Last Contact</h3>","<h3>Name</h3>","<h3>Battery</h3>","<h3>Temperature</h3>","<h3>Actions</h3>"]);
+  });
+  
+  eb.register("web.out.groups", function(msg){
+    var groups = msg.groups;
+    big.vis.tabulate("groups", groups, ["<h3>Group</h3>","<h3>Involved phones</h3>","<h3>Remaining phones</h3>","<h3>Actions</h3>"]);
+  });
+  
+  eb.register("web.out.logs", function(msg){
+    var logs = msg.logs;
+    big.vis.tabulate("logs", logs, [""]);
+  });
+  
+  eb.publish("web.in.refresh", {});
+}
+
+function openEditor(){
+  editorWindow = window.open("editor/index.html");
+  editorWindow.onload = function() {editorWindow.RED.bus = eb;}
+}
+
+function deleteApk(name){
+  eb.publish("web.in.apk",{"action": "delete", "filename": name});
+}
+
+function undeployAppOnGroup(appPackage, group){
+  eb.publish("web.in.apk",{"action": "undeploy", "package": appPackage, "group": group});
+}
+
+function deployAppOnGroup(appPackage, group){
+  eb.publish("web.in.apk",{"action": "deploy", "package": appPackage, "group": group});
+}
+
+function deletePhoneFromGroup(groupName, imei){
+  eb.publish("web.in.apk",{"action": "deletePhoneFromGroup", "group": groupName, "imei": imei});
+}
+
+function addPhoneToGroup(groupName, imei){
+  eb.publish("web.in.apk",{"action": "addPhoneToGroup", "group": groupName, "imei": imei});
+}
+
+function deleteGroup(groupName){
+  eb.publish("web.in.apk",{"action": "deleteGroup", "group": groupName});
+}
+
+function deletePhone(imei){
+  eb.publish("web.in.apk",{"action": "deletePhone", "imei": imei});
+}
+
+var allParts;
+
+function recursivePublish(filename, p, part, length) {
+	setTimeout(function(){ 
+		d3.select("#progress").style("visibility", "visible");
+		var info = 100*((p + 1) / length);
+		var progress = info + "%";
+        big.vis.tabulate("progress", "", [progress]);
+                
+        eb.publish("web.in.apkupload", {"part": p, "filename": filename, "parts": length, "base64": part});
+        
+        if(p < length - 1) {
+        	var i = p + 1;
+        	recursivePublish(filename, i, allParts[i], length);
+        }
+        else d3.select("#progress").style("visibility", "hidden");
+	}, 
+	500);
+}
+
+function handleFileSelect(evt){
+  var files = evt.target.files; // FileList object
+  
+  // Loop through the FileList and render image files as thumbnails.
+  for (var i = 0, f; f = files[i]; i++) {
+    var reader = new FileReader();
+    // Closure to capture the file information.
+    reader.onload = (function(theFile) {
+      return function(e) {
+        var base64 = e.target.result;
+        base64 = base64.substring(base64.indexOf(",") + 1)
+        
+        allParts = base64.match(/.{1,32768}/g);
+        recursivePublish(theFile.name, 0, allParts[0], allParts.length);
+      };
+    })(f);
+
+    // Read in the image file as a data URL.
+    reader.readAsDataURL(f);
+  }
+}
+
+function setCookie(cname, cvalue, exhours) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exhours*60*60*1000));
+    var expires = "expires="+d.toUTCString();
+    document.cookie = cname + "=" + cvalue + "; " + expires;
+}
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0; i<ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1);
+        if (c.indexOf(name) == 0) return c.substring(name.length, c.length);
+    }
+    return "";
+}
+
+function deleteCookie(name) {
+    setCookie(name,"",-1);
+}
+
+function tryLoginWithCookie() {
+	eb.login("", "", getCookie("sessionID"), function(reply){
+	    if(reply.status === 'ok'){
+	      	d3.select("#content").style("visibility", "visible");
+			setCookie("sessionID", reply.sessionid, 2);
+	       	onLogin();
+	    }
+	    else {
+	    	var result_style = document.getElementById('login-container').style;
+			result_style.display = 'block';
+	    }
+  	});
+}
+
+function changePhoneName(imei, oldName) {
+    var name = prompt("Please enter a new name for the device", oldName);
+    
+    if (name != null) {
+      eb.publish("web.in.apk",{"action": "changePhoneName", "imei": imei, "name": name});
+    }
+}
+
+function changeConfig(packageName, oldConfig) {
+    var config = prompt("Change the config", oldConfig);
+    
+    if (config != null) {
+      eb.publish("web.in.apk",{"action": "changeConfig", "packageName": packageName, "config": config});
+    }
+}
+    
+
+$(document).ready(function() {
+  $('#loginPassword').keypress(function(e){
+      if(e.keyCode==13)
+      $('#loginButton').click();
+  });
+
+  $("#loginButton").click(function() {
+  	eb.login($("#loginUser").val(), $("#loginPassword").val(), "", function(reply){
+    	if(reply.status === 'ok'){
+          	d3.select("#content").style("visibility", "visible");
+          	
+          	var result_style = document.getElementById('login-container').style;
+			result_style.display = 'none';
+			
+			setCookie("sessionID", reply.sessionid, 2);
+          	onLogin();
+        }
+        else {
+        	$("#loginUser").val("");
+        	$("#loginPassword").val("");
+        }
+  	});
+  });
+  
+  $("#logoutButton").click(function() {
+    eb.close();
+    eb = new vertx.EventBus("http://"+window.location.hostname+":"+window.location.port+"/vertxbus");
+    $("#loginUser").val("");
+    $("#loginPassword").val("");
+    eb.onclose = function(){
+        d3.select("#content").style("visibility", "hidden");
+    }
+    
+    d3.select("#content").style("visibility", "hidden");
+    var result_style = document.getElementById('login-container').style;
+	result_style.display = 'block';
+	
+	deleteCookie("sessionID");
+  });
+  
+  $("#createButton").click(function() {
+    eb.publish("web.in.apk",{"action": "addGroup", "group": $("#groupName").val()});
+  });
+  
+  document.getElementById('apkFiles').addEventListener('change', handleFileSelect, false);
+  
+  eb = new vertx.EventBus("http://"+window.location.hostname+":"+window.location.port+"/vertxbus");
+  
+  eb.onclose = function(){
+    d3.select("#content").style("visibility", "hidden");
+  }
+  
+  //try to login with cookie
+  setTimeout(tryLoginWithCookie, 1000);
+});
+
+
+  
+</script>
+<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+</body>
+</html>

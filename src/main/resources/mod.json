@@ -1,0 +1,16 @@
+{
+
+  // Java verticle
+  "main":"de.orolle.bigsense.server.StartCloud",
+  "auto-redeploy": true,
+  "preserve-cwd": true,
+
+  "description":"Stores event data",
+  "licenses": ["The Apache Software License Version 2.0"],
+  "author": "Martin Hellwig",
+
+  // Optional fields
+  "developers": ["Oliver Rolle, Martin Hellwig"],
+  "keywords": ["BigSense", "Server", "Cloud", "Analytics"],
+  "homepage": "www.da-sense.de"
+}
