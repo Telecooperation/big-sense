@@ -1,0 +1,5 @@
+#!/system/bin/sh
+su
+/system/bin/reboot
+sleep 60
+input keyevent 26
