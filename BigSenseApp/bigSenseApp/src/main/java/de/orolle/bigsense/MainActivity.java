@@ -17,6 +17,13 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_layout);
 
+        try {
+            stopService(new Intent(this, UpdateService.class));
+        }
+        catch (Exception e) {
+        }
+        startService(new Intent(this, UpdateService.class));
+
         Button retryButton = (Button) findViewById(R.id.retry_button);
         retryButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -25,12 +32,5 @@ public class MainActivity extends Activity {
                 startService(new Intent(getApplicationContext(), UpdateService.class));
             }
         });
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.activity_menu, menu);
-        return true;
     }
 }

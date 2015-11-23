@@ -36,10 +36,12 @@ public class UpdateService extends Service {
 	 * prevents android from sleep
 	 */
 	private WakeLock mWakeLock;
+
 	/**
 	 * Schedule update retry
 	 */
 	private final Timer timer = new Timer();
+
 	/**
 	 * Update retry interval.
 	 */
@@ -50,10 +52,10 @@ public class UpdateService extends Service {
 	 */
 	public static final String SSH_HOST = "cooldomain.com";
 	public static final int SSH_PORT = 33822;
-	public static final int SSH_RESTART_INTERVAL_IN_MILLISECONDS = 36000000; //Every 10 hours
-	
-	private long lastSshRestart;
+
 	private Process rootProcess;
+
+	private static final String LOGTAG = "BigSense";
 
 	@SuppressLint({ "Wakelock", "WorldWriteableFiles" })
 	@Override
@@ -61,8 +63,6 @@ public class UpdateService extends Service {
 		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 		mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "UpdateService");
 		mWakeLock.acquire();
-
-		lastSshRestart = System.currentTimeMillis();
 		
 		//Store imei in file, so that the server can read it
 		TelephonyManager TelephonyMgr = (TelephonyManager)getSystemService(TELEPHONY_SERVICE);
@@ -77,7 +77,7 @@ public class UpdateService extends Service {
 		} catch (Exception e) {
 		  e.printStackTrace();
 		}
-		
+
 		/*
 		 * Run update every hour
 		 */
@@ -88,31 +88,21 @@ public class UpdateService extends Service {
 
 			@Override
 			public void run() {
-				System.out.println("Run update");
-				try {
+				Log.d(LOGTAG,"Run update, Restarting of SSH-Server");
+	            try {
 					rootProcess = Runtime.getRuntime().exec("su");
-				} catch (IOException e1) {
-					e1.printStackTrace();
+		            DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
+		            os.writeBytes("am force-stop com.icecoldapps.sshserver\n");
+					os.writeBytes("am start \"com.icecoldapps.sshserver/.viewStart\" &\n");
+					os.writeBytes("exit\n");
+		            os.flush();
+		            Thread.sleep(5000);
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
-
-				if((System.currentTimeMillis() - lastSshRestart) > SSH_RESTART_INTERVAL_IN_MILLISECONDS) {
-					Log.d("BigSense","Restarting of SSH-Server");
-
-		            try {
-			            DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
-			            os.writeBytes("am force-stop com.icecoldapps.sshserver\n");
-						os.writeBytes("am start \"com.icecoldapps.sshserver/.viewStart\" &\n");
-						os.writeBytes("exit\n");
-			            os.flush();
-
-			            Thread.sleep(5000);
-					} catch (IOException e) {
-						e.printStackTrace();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					lastSshRestart = System.currentTimeMillis();
-				}
+				//lastSshRestart = System.currentTimeMillis();
 
 				if(remoteTunnel != null) {
 					if(remoteTunnel.isClosed()) {
@@ -135,18 +125,6 @@ public class UpdateService extends Service {
 				}
 
 				try {
-					/*
-					 * Kill connection before new update
-					 * Prevent freeze during through connection problems
-					 */
-					timer.schedule(new TimerTask() {
-						@Override
-						public void run() {
-							stop();
-						}
-					}, INTERVAL - 60000);
-
-
 					remoteTunnel = new Socket(SSH_HOST, SSH_PORT);
 
 					while(!remoteTunnel.isConnected()) {
@@ -170,9 +148,19 @@ public class UpdateService extends Service {
 					t0.start();
 					t1.start();
 
-					Log.v("CloudConnector", "!!!SSH Tunnel started!!!");
-
-					task0.get(); //This one is necessary, because it blocks till the ssh connection is over
+					Log.i(LOGTAG, "!!!SSH Tunnel started!!!");
+					task1.get(); //This one is necessary, because it blocks till the ssh connection is over
+					//stop ssh server
+					try {
+						rootProcess = Runtime.getRuntime().exec("su");
+						DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
+						os.writeBytes("am force-stop com.icecoldapps.sshserver\n");
+						os.writeBytes("exit\n");
+						os.flush();
+						Log.i(LOGTAG, "!!!SSH Tunnel stopped!!!");
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 					stop();
 				}catch(Exception e) {
 					e.printStackTrace();

@@ -151,36 +151,37 @@ public class BigSenseUpdater {
 					batteryTemperature = Float.valueOf(matcher.group(1));
 				}
 				
-				
-				//Watch, which apps can be removed, updated etc.
-				toUninstall = new ArrayList<>();
-				toUpload = new ArrayList<>();
-				toInstallAndStart = new ArrayList<>();
-				toStart = new ArrayList<>();
-				toClose = new ArrayList<>();
-				for(AppVersion app : versionManagement.getApps()) {
-					for(State smatphoneState : app.getSmartphones()) {
-						if(smatphoneState.getImei().equals(imei)) {
-							switch(smatphoneState.getState()) {
-								case UNINSTALL:
-									toUninstall.add(app.getPackageName());
-									break;
-								case INSTALL:
-									toUpload.add(app.getPackageName());
-									toInstallAndStart.add(app.getPackageName());
-									break;
-								case UPDATE:
-									toUninstall.add(app.getPackageName());
-									toUpload.add(app.getPackageName());
-									toInstallAndStart.add(app.getPackageName());
-									break;
-								case UPTODATE: 
-									if((System.currentTimeMillis() - smatphoneState.getLastRestart()) > 
-											Config.RESTART_APP_INTERVAL_MILLISECOND) {
+				if(imei != null && !imei.equals("")) {
+					//Watch, which apps can be removed, updated etc.
+					toUninstall = new ArrayList<>();
+					toUpload = new ArrayList<>();
+					toInstallAndStart = new ArrayList<>();
+					toStart = new ArrayList<>();
+					toClose = new ArrayList<>();
+					for(AppVersion app : versionManagement.getApps()) {
+						for(State smatphoneState : app.getSmartphones()) {
+							if(smatphoneState.getImei().equals(imei)) {
+								switch(smatphoneState.getState()) {
+									case UNINSTALL:
 										toUninstall.add(app.getPackageName());
+										break;
+									case INSTALL:
+										toUpload.add(app.getPackageName());
 										toInstallAndStart.add(app.getPackageName());
-									}
-									break;
+										break;
+									case UPDATE:
+										toUninstall.add(app.getPackageName());
+										toUpload.add(app.getPackageName());
+										toInstallAndStart.add(app.getPackageName());
+										break;
+									case UPTODATE: 
+										if((System.currentTimeMillis() - smatphoneState.getLastRestart()) > 
+												Config.RESTART_APP_INTERVAL_MILLISECOND) {
+											toUninstall.add(app.getPackageName());
+											toInstallAndStart.add(app.getPackageName());
+										}
+										break;
+								}
 							}
 						}
 					}
@@ -193,7 +194,13 @@ public class BigSenseUpdater {
 					updateSmartphoneInfo();
 					vertx.eventBus().publish("web.in.refresh", new JsonObject().putString("action", "update"));
 					
-					System.out.println("Bereits aktuellste Version");
+					System.out.println("Newest Version already installed");
+					cmds.clear();
+					exit();
+				}
+				
+				if(imei == null || imei.equals("")) {
+					System.out.println("Failure while reading imei");
 					cmds.clear();
 					exit();
 				}
