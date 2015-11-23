@@ -3,7 +3,6 @@ First you need to root your phone. Simple search via google how to do this. Now 
 
 ## Install/Configure SSH Server
 - Install the application "com.icecoldapps.sshserver.apk" on your phone
-- Set in he settings of the ssh-application to start with the boot of device
 - Add a new ssh-server:
 --> Username: bigsense (or whatever you want, you have to change it also in the Config.java of the server)
 --> Password: password (or whatever you want, you have to change it also in the Config.java of the server)

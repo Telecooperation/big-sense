@@ -131,13 +131,17 @@ public class APKManager {
 								}
 								app.setSmartphones(phones);
 								app.setGroups(new ArrayList<String>());
-								if(app.getSmartphones().size() > 0) newApps.add(app);
+								if(app.getSmartphones().size() > 0) {
+									newApps.add(app);
+								}
+								else {
+									vertx.fileSystem().deleteSync(apkFolder+name);
+								}
 							}
 							else newApps.add(app);
 						}
 						versionMgmt.setApps(newApps);
 						
-						vertx.fileSystem().deleteSync(apkFolder+name);
 						StartCloud.log.info("APK remove: "+apkFolder+name);
 						
 						apkFilesChanged();
