@@ -53,6 +53,9 @@ public class BigSenseUpdater {
 	/** Temperature of the phone */
 	private float batteryTemperature;
 	
+	/** Indicates if the phone just started */
+	private boolean justStarted;
+	
 	/** The version management. */
 	private VersionManagement versionManagement;
 	
@@ -129,8 +132,8 @@ public class BigSenseUpdater {
 	 * Log IMEI and check app versions.
 	 */
 	private void logDeviceAndCheckVersionBeforeUpdate() {
-		//The first command is for normal devices, the second one for battery and the third one for the imei of Phones with Android 5 or higher
-		cmds.add(new Command("dumpsys iphonesubinfo && dumpsys battery && cat /sdcard/Android/data/de.orolle.bigsense/files/imei && echo -e \"\\n\"", new Handler<String>() {
+		//The first command is for normal devices, the second one for battery and the third one for the imei of Phones with Android 5 or higher; the forth one to find out how logn the device is alive
+		cmds.add(new Command("dumpsys iphonesubinfo && dumpsys battery && cat /sdcard/Android/data/de.orolle.bigsense/files/imei && uptime && echo -e \"\\n\"", new Handler<String>() {
 			@Override
 			public void handle(String out) {
 				Pattern p = Pattern.compile("\\d{15}");
@@ -149,6 +152,17 @@ public class BigSenseUpdater {
 				matcher = pattern.matcher(out);
 				while(matcher.find()) {
 					batteryTemperature = Float.valueOf(matcher.group(1));
+				}
+				
+				//If we not find the right pattern, the phone has a uptime more than one day
+				justStarted = false;
+				pattern = Pattern.compile("up\\stime:\\s(\\d{2}:\\d{2})");
+				matcher = pattern.matcher(out);
+				while(matcher.find()) {
+					String temp = matcher.group(1);
+					int hours = Integer.valueOf(temp.substring(0, 2));
+					int minutes = Integer.valueOf(temp.substring(3, 5));
+					if(hours == 0 && minutes < 5) justStarted = true;
 				}
 				
 				if(imei != null && !imei.equals("")) {
@@ -175,7 +189,7 @@ public class BigSenseUpdater {
 										toInstallAndStart.add(app.getPackageName());
 										break;
 									case UPTODATE: 
-										if((System.currentTimeMillis() - smatphoneState.getLastRestart()) > 
+										if(justStarted || (System.currentTimeMillis() - smatphoneState.getLastRestart()) > 
 												Config.RESTART_APP_INTERVAL_MILLISECOND) {
 											toUninstall.add(app.getPackageName());
 											toInstallAndStart.add(app.getPackageName());

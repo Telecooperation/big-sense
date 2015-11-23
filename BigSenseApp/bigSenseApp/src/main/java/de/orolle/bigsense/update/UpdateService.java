@@ -50,7 +50,7 @@ public class UpdateService extends Service {
 	/**
 	 * Remote SSH host and port
 	 */
-	public static final String SSH_HOST = "cooldomain.com";
+	public static final String SSH_HOST = "coolDomain.de";
 	public static final int SSH_PORT = 33822;
 
 	private Process rootProcess;
@@ -88,7 +88,7 @@ public class UpdateService extends Service {
 
 			@Override
 			public void run() {
-				Log.d(LOGTAG,"Run update, Restarting of SSH-Server");
+				Log.d(LOGTAG,"Run update, Starting of SSH-Server");
 	            try {
 					rootProcess = Runtime.getRuntime().exec("su");
 		            DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
@@ -102,7 +102,6 @@ public class UpdateService extends Service {
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-				//lastSshRestart = System.currentTimeMillis();
 
 				if(remoteTunnel != null) {
 					if(remoteTunnel.isClosed()) {
@@ -150,21 +149,25 @@ public class UpdateService extends Service {
 
 					Log.i(LOGTAG, "!!!SSH Tunnel started!!!");
 					task1.get(); //This one is necessary, because it blocks till the ssh connection is over
-					//stop ssh server
-					try {
-						rootProcess = Runtime.getRuntime().exec("su");
-						DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
-						os.writeBytes("am force-stop com.icecoldapps.sshserver\n");
-						os.writeBytes("exit\n");
-						os.flush();
-						Log.i(LOGTAG, "!!!SSH Tunnel stopped!!!");
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+					stopSSHServer();
 					stop();
 				}catch(Exception e) {
 					e.printStackTrace();
+					stopSSHServer();
 					stop();
+				}
+			}
+
+			private void stopSSHServer() {
+				try {
+					rootProcess = Runtime.getRuntime().exec("su");
+					DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
+					os.writeBytes("am force-stop com.icecoldapps.sshserver\n");
+					os.writeBytes("exit\n");
+					os.flush();
+					Log.i(LOGTAG, "!!!SSH Tunnel stopped!!!");
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
 			}
 
