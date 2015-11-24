@@ -25,6 +25,9 @@ public class StartService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+		Notification notification = new NotificationCompat.Builder(this).build();
+		startForeground(startId, notification);
+		
         if(intent.getExtras() != null) { // intent extras provided
             Object extra_conf = intent.getExtras().get("config");
             JSONObject config = new JSONObject();

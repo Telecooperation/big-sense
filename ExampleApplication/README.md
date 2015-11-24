@@ -24,6 +24,10 @@ Add config.json in assets and fill it with the config you need (in json-format).
 ## StartService.java
 In this class you need this code to get the config parameters:
 
+	//This one is needed to prevent to close the app from android system (you have to choose a different number than 1337)
+	Notification notification = new NotificationCompat.Builder(this).build();
+	startForeground(1337, notification);
+		
 	if(intent.getExtras() != null) {
 		Object extra_conf = intent.getExtras().get("config");
 	    JSONObject config = new JSONObject();

