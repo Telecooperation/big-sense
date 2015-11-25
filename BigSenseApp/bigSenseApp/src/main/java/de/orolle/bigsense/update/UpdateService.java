@@ -45,9 +45,14 @@ public class UpdateService extends Service {
 	private final Timer timer = new Timer();
 
 	/**
-	 * Update retry interval.
+	 * Update interval.
 	 */
 	private long INTERVAL = 3600000; // every hour
+
+	/**
+	 * Retry contact server timeout
+	 */
+	private long MAX_Retry_TIMEOUT = 30000; // try it 30 seconds
 
 	/**
 	 * Remote SSH host and port
@@ -126,11 +131,19 @@ public class UpdateService extends Service {
 				}
 
 				try {
-					remoteTunnel = new Socket(SSH_HOST, SSH_PORT);
 
-					while(!remoteTunnel.isConnected()) {
+					int tried = 0;
+					while(tried < MAX_Retry_TIMEOUT/100 && (remoteTunnel == null || !remoteTunnel.isConnected())) {
+						try {
+							remoteTunnel = new Socket(SSH_HOST, SSH_PORT);
+						}
+						catch(Exception e) {
+						}
+						tried++;
 						Thread.sleep(100);
 					}
+					//try it  last time; if it doesn't work, this will throw an exception
+					if(!remoteTunnel.isConnected()) remoteTunnel = new Socket(SSH_HOST, SSH_PORT);
 
 					while(localSSH == null || !localSSH.isConnected()){
 						try { //try to connect as long till a connection is possible
