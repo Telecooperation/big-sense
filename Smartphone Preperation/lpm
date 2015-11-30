@@ -1,5 +1,3 @@
 #!/system/bin/sh
-su
+sleep 10
 /system/bin/reboot
-sleep 60
-input keyevent 26

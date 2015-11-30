@@ -16,7 +16,9 @@ Method 1:
 --> mount -o remount,rw /system
 --> mv /system/bin/lpm /system/bin/lpm.orig
 --> cp /sdcard/Downloads/lpm /system/bin/lpm
+--> chmod 755 /system/bin/lpm
 --> chown root.shell /system/bin/lpm
+--> mount -o ro,remount /system
 
 Method 2:
 Connect the phone via USB Debug and run the following command via console: fastboot oem off-mode-charge 0
