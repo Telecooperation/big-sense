@@ -27,3 +27,4 @@ Connect the phone via USB Debug and run the following command via console: fastb
 - Set high GPS accuracy
 - Install GPlayServices (these are used to retrieve sensor data)
 - Deactivate Sim-Pin request
+- Deactivate any security to get access to phone (pin, pattern, etc.)

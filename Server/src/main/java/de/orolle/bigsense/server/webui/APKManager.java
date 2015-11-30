@@ -533,7 +533,10 @@ public class APKManager {
 		
 		//check if its a real bigsense-app
 		String config = DecodeAndroidManifest.extractFile(apkFolder + filename, "assets/config.json");
-		if(config != "" && config != null) {
+		String activity = DecodeAndroidManifest.extractFile(apkFolder + filename, "assets/activity.json");
+		if((config != null && config != "") || (activity != null && activity.equals(""))) {
+			//If this is the case, this application is an activity and has no config
+			if(activity != null && activity.equals("")) config = "";
 		
 			String packageName = readApkPackage(apkFolder+filename);
 			List<AppVersion> newApps = new ArrayList<>();

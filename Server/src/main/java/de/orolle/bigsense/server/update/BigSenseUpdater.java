@@ -21,6 +21,7 @@ import de.orolle.bigsense.server.devicemgmt.Smartphone;
 import de.orolle.bigsense.server.devicemgmt.SmartphoneState;
 import de.orolle.bigsense.server.devicemgmt.State;
 import de.orolle.bigsense.server.devicemgmt.VersionManagement;
+import de.orolle.bigsense.server.webui.DecodeAndroidManifest;
 
 /**
  * Manages Update Process for Android Smartphones.
@@ -320,8 +321,15 @@ public class BigSenseUpdater {
 				if(packageName.equals(app.getPackageName())) contains = true;
 			}
 			if(contains) {
-				String cmd = "am startservice --es config '"+ app.getConfig().replaceAll("&quot;", "\"") +"' "
+				String activity = DecodeAndroidManifest.extractFile(apkFolder + app.getFileName(), "assets/activity.json");
+				String cmd = "";
+				if(activity != null && activity.equals("")) {
+					cmd = "am start -n "+ app.getPackageName() +"/.StartActivity";
+				}
+				else {
+				cmd = "am startservice --es config '"+ app.getConfig().replaceAll("&quot;", "\"") +"' "
 						+ "-n "+ app.getPackageName() +"/.StartService";
+				}
 				cmds.add(new Command(cmd));
 			}			
 		}
