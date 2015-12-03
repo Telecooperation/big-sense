@@ -228,7 +228,7 @@ public class AppVersion {
 		Date resultdate = new Date(lastChange);
 			
 		JsonArray out = new JsonArray();
-		out.add("<h4>" + packageName + "</h4>");
+		out.add("<h4>" + packageName.replace(".", ". ") + "</h4>");
 		out.add("<h4>" + sdf.format(resultdate) + "</h4>");
 		
 		List<State> phonesToShow = new ArrayList<>();

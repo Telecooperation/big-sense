@@ -47,7 +47,7 @@ public class UpdateService extends Service {
 	/**
 	 * Update interval.
 	 */
-	private long INTERVAL = 3600000; // every hour
+	private long INTERVAL = 1800000; // every half hour
 
 	/**
 	 * Retry contact server timeout
