@@ -5,8 +5,9 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
   <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-  <script src="http://cdn.sockjs.org/sockjs-0.3.4.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/sockjs-client/0.3.4/sockjs.min.js"></script>
   <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
   <script src="vertxbus.js"></script>
   <script src="visualization.js"></script>
@@ -193,7 +194,7 @@ function recursivePublish(filename, p, part, length) {
         }
         else d3.select("#progress").style("visibility", "hidden");
 	}, 
-	500);
+	200);
 }
 
 function handleFileSelect(evt){
@@ -269,7 +270,6 @@ function changeConfig(packageName, oldConfig) {
       eb.publish("web.in.apk",{"action": "changeConfig", "packageName": packageName, "config": config});
     }
 }
-    
 
 $(document).ready(function() {
   $('#loginPassword').keypress(function(e){
@@ -330,7 +330,5 @@ $(document).ready(function() {
 
   
 </script>
-<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
-<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 </body>
 </html>

@@ -475,7 +475,7 @@ public class MySQL {
 		try {
 			// Statements allow to issue SQL queries to the database
 		    statement = connect.createStatement();
-			resultSet = statement.executeQuery("Select timestamp, log from BigSense.Log_Connections Order By ID DESC Limit 10");
+			resultSet = statement.executeQuery("Select timestamp, log from BigSense.Log_Connections Order By ID DESC Limit 30");
 			while (resultSet.next()) {
 				JsonArray oneLog = new JsonArray();
 				SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");    

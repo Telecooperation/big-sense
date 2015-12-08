@@ -15,7 +15,7 @@ big.vis = function() {
       .enter()
       .append("th")
         .html(function(column) { return column; });
-      
+        
     // create a row for each object in the data
     var rows = tbody.selectAll("tr")
       .data(data)
@@ -31,7 +31,8 @@ big.vis = function() {
       })
       .enter()
       .append("td")
-        .html(function(d) { return d.value; });
+      .attr("style", "padding-bottom: 20px;")
+      .html(function(d) { return d.value; }); 
       
     return table;
   }

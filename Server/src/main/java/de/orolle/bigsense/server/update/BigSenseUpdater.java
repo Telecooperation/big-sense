@@ -211,12 +211,22 @@ public class BigSenseUpdater {
 					
 					System.out.println("Newest Version already installed");
 					cmds.clear();
+					
+					//add log to db
+					MySQL sqlConnection = MySQL.getInstance();
+					sqlConnection.addLog(imei, log);
+					log = "";
 					exit();
 				}
 				
 				if(imei == null || imei.equals("")) {
 					System.out.println("Failure while reading imei");
 					cmds.clear();
+					
+					//add log to db
+					MySQL sqlConnection = MySQL.getInstance();
+					sqlConnection.addLog(imei, log);
+					log = "";
 					exit();
 				}
 				
@@ -425,7 +435,6 @@ public class BigSenseUpdater {
 					command = put.toJson().encode();
 				}
 
-				ssh.handle(result);
 				System.out.println(command);
 				System.out.println(result);
 				
@@ -433,7 +442,9 @@ public class BigSenseUpdater {
 				SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");    
 				sdf.setTimeZone(TimeZone.getTimeZone("Europe/Berlin"));
 				Date now = new Date();
-				log+= sdf.format(now) + ": [\"Command\":\"" + command + "\", \"Result\":\"" + result + "\"]\n";
+				log += sdf.format(now) + ": [\"Command\":\"" + command + "\", \"Result\":\"" + result + "\"]\n";
+				
+				ssh.handle(result);
 						
 				// Force wait, especially on Put. 
 				// Increases stability of update process
