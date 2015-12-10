@@ -82,7 +82,7 @@ public class APKManager {
 				}
 
 				if(timers.get(filename)==null) {
-					long id = vertx.setTimer(60*60*1000, new Handler<Long>() { // Upload is cleaned up after 1 hour
+					long id = vertx.setTimer(5*60*1000, new Handler<Long>() { // Upload is cleaned up after 5 minutes
 						@Override
 						public void handle(Long event) {
 							files.remove(filename);
