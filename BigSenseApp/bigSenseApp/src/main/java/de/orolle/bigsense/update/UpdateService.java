@@ -14,6 +14,8 @@ import android.app.Notification;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
@@ -88,8 +90,23 @@ public class UpdateService extends Service {
 		  e.printStackTrace();
 		}
 
+		//First check if the device is connected to the internet (after start from empty battery some devices does not connect)
+		try {
+			Thread.sleep(10000);
+			if(!isOnline()) {
+				Log.i("Device Offline", "Reboot to get new connection");
+				rootProcess = Runtime.getRuntime().exec("su");
+				DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
+				os.writeBytes("reboot\n");
+				os.close();
+			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+
 		/*
-		 * Run update every hour
+		 * Run update every half hour
 		 */
 		timer.scheduleAtFixedRate(new TimerTask() {
 			Socket remoteTunnel, localSSH;
@@ -229,4 +246,11 @@ public class UpdateService extends Service {
 		return null;
 	}
 
+	private Boolean isOnline()	{
+		ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo ni = cm.getActiveNetworkInfo();
+		if(ni != null && ni.isConnected())
+			return true;
+		return false;
+	}
 }

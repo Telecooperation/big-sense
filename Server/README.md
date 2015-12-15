@@ -22,7 +22,7 @@ You need a Linux machine, where you do the following things (only one time):
 - Create folder "apk" in "/home/bigsense/BigSense/"
 - Change rights of folder "/home/bigsense/BigSense/" recursive to 777
 - Open the lib-file "ganymed-ssh2-build210.jar" located in libs-folder with 7Zip/WinRar; Copy the folder "ch" to /home/bigsense/BigSense/"
-- Open the lib-file "mysql-connector-java-5.1.37-bin.jar" located in libs-folder with 7Zip/WinRar; Copy the folder "ch" to /home/bigsense/BigSense/"
+- Open the lib-file "mysql-connector-java-5.1.37-bin.jar" located in libs-folder with 7Zip/WinRar; Copy the folder "com" to /home/bigsense/BigSense/"
 
 - apt-get install php5-common libapache2-mod-php5 php5-cli
 - Change Port in /etc/apache2/ports.conf and /etc/apache2/sites-available/default from 80 to 8080
