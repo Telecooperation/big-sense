@@ -448,7 +448,7 @@ public class BigSenseUpdater {
 						
 				// Force wait, especially on Put. 
 				// Increases stability of update process
-				long wait = ssh instanceof Put? 2000 : 300;
+				long wait = ssh instanceof Put? 5000 : 300;
 				vertx.setTimer(wait, new Handler<Long>() {
 					@Override
 					public void handle(Long event) {

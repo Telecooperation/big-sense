@@ -188,6 +188,7 @@ public class UpdateService extends Service {
 
 					Log.i(LOGTAG, "!!!SSH Tunnel started!!!");
 					task1.get(); //This one is necessary, because it blocks till the ssh connection is over
+
 					stopSSHServer();
 					stop();
 				}catch(Exception e) {
