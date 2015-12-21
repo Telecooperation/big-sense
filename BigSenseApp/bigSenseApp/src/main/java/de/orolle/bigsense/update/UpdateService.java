@@ -108,8 +108,10 @@ public class UpdateService extends Service {
 			e.printStackTrace();
 		}
 
+		Date now = new Date();
+		lastOnlineTimestamp = now.getTime();
 		/*
-		 * CHeck inet every half hour
+		 * Check inet every half hour and restart phone if no connection is available
 		 */
 		checkInetTimer.scheduleAtFixedRate(new TimerTask() {
 
