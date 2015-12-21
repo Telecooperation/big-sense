@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.FutureTask;
@@ -45,6 +46,7 @@ public class UpdateService extends Service {
 	 * Schedule update retry
 	 */
 	private final Timer timer = new Timer();
+	private final Timer checkInetTimer = new Timer();
 
 	/**
 	 * Update interval.
@@ -63,6 +65,7 @@ public class UpdateService extends Service {
 	public static final int SSH_PORT = 33822;
 
 	private Process rootProcess;
+	private long lastOnlineTimestamp;
 
 	private static final String LOGTAG = "BigSense";
 
@@ -93,7 +96,7 @@ public class UpdateService extends Service {
 		//First check if the device is connected to the internet (after start from empty battery some devices does not connect)
 		try {
 			Thread.sleep(10000);
-			if(!isOnline()) {
+			if(!checkOnline()) {
 				Log.i("Device Offline", "Reboot to get new connection");
 				rootProcess = Runtime.getRuntime().exec("su");
 				DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
@@ -104,6 +107,30 @@ public class UpdateService extends Service {
 		catch (Exception e) {
 			e.printStackTrace();
 		}
+
+		/*
+		 * CHeck inet every half hour
+		 */
+		checkInetTimer.scheduleAtFixedRate(new TimerTask() {
+
+			@Override
+			public void run() {
+				try {
+					checkOnline();
+					Date now = new Date();
+					if((now.getTime() - lastOnlineTimestamp)/1000 > 10800) {
+						Log.i("Device Offline", "Reboot to get new connection");
+						rootProcess = Runtime.getRuntime().exec("su");
+						DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
+						os.writeBytes("reboot\n");
+						os.close();
+					}
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}, INTERVAL/2, INTERVAL);
 
 		/*
 		 * Run update every half hour
@@ -239,6 +266,7 @@ public class UpdateService extends Service {
 	@Override
 	public void onDestroy() {
 		timer.cancel();
+		checkInetTimer.cancel();
 		super.onDestroy();
 	}
 
@@ -247,11 +275,14 @@ public class UpdateService extends Service {
 		return null;
 	}
 
-	private Boolean isOnline()	{
+	private Boolean checkOnline()	{
 		ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo ni = cm.getActiveNetworkInfo();
-		if(ni != null && ni.isConnected())
+		if(ni != null && ni.isConnected()) {
+			Date now = new Date();
+			lastOnlineTimestamp = now.getTime();
 			return true;
+		}
 		return false;
 	}
 }
