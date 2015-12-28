@@ -28,6 +28,12 @@
             android:process=":remote" >
         </service>
 
+        <service
+            android:name=".update.RestartService"
+            android:label="BigSense RestartService"
+            android:process=":remote" >
+        </service>
+
         <receiver android:name=".update.BootReceiver" >
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" >

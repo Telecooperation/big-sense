@@ -16,5 +16,6 @@ public class BootReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(final Context context, final Intent bootintent) {
 		context.startService(new Intent(context, UpdateService.class));
+		context.startService(new Intent(context, RestartService.class));
 	}
 }

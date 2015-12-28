@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.FutureTask;
@@ -15,8 +14,6 @@ import android.app.Notification;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
@@ -46,12 +43,11 @@ public class UpdateService extends Service {
 	 * Schedule update retry
 	 */
 	private final Timer timer = new Timer();
-	private final Timer checkInetTimer = new Timer();
 
 	/**
 	 * Update interval.
 	 */
-	private long INTERVAL = 1800000; // every half hour
+	public static long INTERVAL = 1800000; // every half hour
 
 	/**
 	 * Retry contact server timeout
@@ -65,7 +61,6 @@ public class UpdateService extends Service {
 	public static final int SSH_PORT = 33822;
 
 	private Process rootProcess;
-	private long lastOnlineTimestamp;
 
 	private static final String LOGTAG = "BigSense";
 
@@ -93,46 +88,6 @@ public class UpdateService extends Service {
 		  e.printStackTrace();
 		}
 
-		//First check if the device is connected to the internet (after start from empty battery some devices does not connect)
-		try {
-			Thread.sleep(10000);
-			if(!checkOnline()) {
-				Log.i("Device Offline", "Reboot to get new connection");
-				rootProcess = Runtime.getRuntime().exec("su");
-				DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
-				os.writeBytes("reboot\n");
-				os.close();
-			}
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		Date now = new Date();
-		lastOnlineTimestamp = now.getTime();
-		/*
-		 * Check inet every half hour and restart phone if no connection is available
-		 */
-		checkInetTimer.scheduleAtFixedRate(new TimerTask() {
-
-			@Override
-			public void run() {
-				try {
-					checkOnline();
-					Date now = new Date();
-					if((now.getTime() - lastOnlineTimestamp)/1000 > 10800) {
-						Log.i("Device Offline", "Reboot to get new connection");
-						rootProcess = Runtime.getRuntime().exec("su");
-						DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
-						os.writeBytes("reboot\n");
-						os.close();
-					}
-				}
-				catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}, INTERVAL/2, INTERVAL);
 
 		/*
 		 * Run update every half hour
@@ -268,23 +223,11 @@ public class UpdateService extends Service {
 	@Override
 	public void onDestroy() {
 		timer.cancel();
-		checkInetTimer.cancel();
 		super.onDestroy();
 	}
 
 	@Override
 	public IBinder onBind(Intent intent) {
 		return null;
-	}
-
-	private Boolean checkOnline()	{
-		ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
-		NetworkInfo ni = cm.getActiveNetworkInfo();
-		if(ni != null && ni.isConnected()) {
-			Date now = new Date();
-			lastOnlineTimestamp = now.getTime();
-			return true;
-		}
-		return false;
 	}
 }
