@@ -94,14 +94,29 @@ public class RestartService extends Service {
         return null;
     }
 
+    /**
+     * Looks first if the device is connected to a mobile network and if so pings google
+     * @return
+     */
     private Boolean checkOnline()	{
         Log.i(LOGTAG, "Checks Inet connection");
         ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo ni = cm.getActiveNetworkInfo();
         if(ni != null && ni.isConnected()) {
-            Date now = new Date();
-            lastOnlineTimestamp = now.getTime();
-            return true;
+            try {
+                Process p1 = java.lang.Runtime.getRuntime().exec("ping -c 1 www.google.com");
+                int returnVal = p1.waitFor();
+                boolean reachable = (returnVal==0);
+                if(reachable) {
+                    Date now = new Date();
+                    lastOnlineTimestamp = now.getTime();
+                    return true;
+                }
+                else return false;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return false;
         }
         return false;
     }
