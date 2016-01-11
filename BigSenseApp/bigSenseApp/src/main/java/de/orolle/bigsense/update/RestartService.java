@@ -8,15 +8,20 @@ import java.util.TimerTask;
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.BatteryManager;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 public class RestartService extends Service {
     /**
@@ -67,12 +72,25 @@ public class RestartService extends Service {
             public void run() {
                 try {
                     checkOnline();
+
                     Date now = new Date();
                     if ((now.getTime() - lastOnlineTimestamp) / 1000 > 10800) {
                         Log.i(LOGTAG, "Reboot to get new connection");
                         rootProcess = Runtime.getRuntime().exec("su");
                         DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
                         os.writeBytes("reboot\n");
+                        os.close();
+                    }
+
+                    //Shutdown phone, if its not in loading state and battery is less than 50%
+                    Intent batteryIntent = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+                    int level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+                    int isPlugged = batteryIntent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+                    if (level != -1 && level < 50 && !(isPlugged == BatteryManager.BATTERY_PLUGGED_USB || isPlugged == BatteryManager.BATTERY_PLUGGED_AC)) {
+                        Log.i(LOGTAG, "Shutdown phone");
+                        rootProcess = Runtime.getRuntime().exec("su");
+                        DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
+                        os.writeBytes("reboot -p\n");
                         os.close();
                     }
                 } catch (Exception e) {
