@@ -13,6 +13,7 @@ First you need to root your phone. Simple search via google how to do this. Now 
 Method 1:
 - Copy file "lpm" on to your phone in the folder /sytem/bin/
 - Do the following per ssh (or terminal on phone)
+--> su
 --> mount -o remount,rw /system
 --> mv /system/bin/lpm /system/bin/lpm.orig
 --> cp /sdcard/Downloads/lpm /system/bin/lpm
