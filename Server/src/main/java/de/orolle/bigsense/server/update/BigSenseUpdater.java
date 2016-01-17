@@ -216,6 +216,7 @@ public class BigSenseUpdater {
 					MySQL sqlConnection = MySQL.getInstance();
 					sqlConnection.addLog(imei, log);
 					log = "";
+					setDateOnPhone();
 					exit();
 				}
 				
@@ -227,6 +228,7 @@ public class BigSenseUpdater {
 					MySQL sqlConnection = MySQL.getInstance();
 					sqlConnection.addLog(imei, log);
 					log = "";
+					setDateOnPhone();
 					exit();
 				}
 				
@@ -241,6 +243,9 @@ public class BigSenseUpdater {
 				
 				// Start ModuleLoader Service of installed Apps
 				startModules();
+				
+				// Set the actual date in a file on phone
+				setDateOnPhone();
 				
 				// Close
 				exit();
@@ -343,6 +348,14 @@ public class BigSenseUpdater {
 				cmds.add(new Command(cmd));
 			}			
 		}
+	}
+	
+	/**
+	 * Sets the actual date in a defined file on phone
+	 */
+	private void setDateOnPhone() {
+		Date now = new Date();
+		cmds.add(new Command("echo " + now.getTime() + " > /sdcard/Android/data/de.orolle.bigsense/files/lastupdate"));
 	}
 
 	/**

@@ -1,6 +1,10 @@
 package de.orolle.bigsense.update;
 
+import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -16,12 +20,10 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.BatteryManager;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.widget.Toast;
 
 public class RestartService extends Service {
     /**
@@ -33,6 +35,7 @@ public class RestartService extends Service {
 
     private Process rootProcess;
     private long lastOnlineTimestamp;
+    private long lastSuccessfulConnection;
 
     private static final String LOGTAG = "BigSense Restarter";
 
@@ -51,7 +54,7 @@ public class RestartService extends Service {
         try {
             Thread.sleep(10000);
             if (!checkOnline()) {
-                Log.i("Device Offline", "Reboot to get new connection");
+                Log.i("Device Offline", "Reboot to get new connection at phone-startup");
                 rootProcess = Runtime.getRuntime().exec("su");
                 DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
                 os.writeBytes("reboot\n");
@@ -71,17 +74,6 @@ public class RestartService extends Service {
             @Override
             public void run() {
                 try {
-                    checkOnline();
-
-                    Date now = new Date();
-                    if ((now.getTime() - lastOnlineTimestamp) / 1000 > 10800) {
-                        Log.i(LOGTAG, "Reboot to get new connection");
-                        rootProcess = Runtime.getRuntime().exec("su");
-                        DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
-                        os.writeBytes("reboot\n");
-                        os.close();
-                    }
-
                     //Shutdown phone, if its not in loading state and battery is less than 50%
                     Intent batteryIntent = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
                     int level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
@@ -93,12 +85,54 @@ public class RestartService extends Service {
                         os.writeBytes("reboot -p\n");
                         os.close();
                     }
+
+                    checkOnline();
+                    Date now = new Date();
+                    if ((now.getTime() - lastOnlineTimestamp) / 1000 > 10800) {
+                        Log.i(LOGTAG, "Reboot to get new connection");
+                        rootProcess = Runtime.getRuntime().exec("su");
+                        DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
+                        os.writeBytes("reboot\n");
+                        os.close();
+                    }
+
+                    //check if there was a successful connection in the last 3 hours
+                    getLastSuccessfulConnection();
+                    if ((now.getTime() - lastSuccessfulConnection) / 1000 > 10800) {
+                        Log.i(LOGTAG, "Reboot to get new connection");
+                        rootProcess = Runtime.getRuntime().exec("su");
+                        DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
+                        os.writeBytes("reboot\n");
+                        os.close();
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }, UpdateService.INTERVAL / 2, UpdateService.INTERVAL);
         return flags;
+    }
+
+    /**
+     * Reads a file, where the last successfull connection timestamp is written
+     */
+    private void getLastSuccessfulConnection() {
+        String path = getExternalFilesDir(null).getAbsolutePath();
+
+        //Get the text file
+        File file = new File(path + "/lastupdate");
+
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String line;
+
+            while ((line = br.readLine()) != null) {
+                lastSuccessfulConnection = Long.parseLong(line);
+            }
+            br.close();
+        }
+        catch (IOException e) {
+        }
     }
 
     @Override
