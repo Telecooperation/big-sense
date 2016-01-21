@@ -19,9 +19,9 @@ import de.orolle.bigsense.server.database.MySQL;
 import de.orolle.bigsense.server.devicemgmt.AppVersion;
 import de.orolle.bigsense.server.devicemgmt.Smartphone;
 import de.orolle.bigsense.server.devicemgmt.SmartphoneState;
-import de.orolle.bigsense.server.devicemgmt.State;
+import de.orolle.bigsense.server.devicemgmt.DeployedSmartphoneStatus;
 import de.orolle.bigsense.server.devicemgmt.VersionManagement;
-import de.orolle.bigsense.server.webui.DecodeAndroidManifest;
+import de.orolle.bigsense.server.util.DecodeAndroidManifest;
 
 /**
  * Manages Update Process for Android Smartphones.
@@ -174,7 +174,7 @@ public class BigSenseUpdater {
 					toStart = new ArrayList<>();
 					toClose = new ArrayList<>();
 					for(AppVersion app : versionManagement.getApps()) {
-						for(State smatphoneState : app.getSmartphones()) {
+						for(DeployedSmartphoneStatus smatphoneState : app.getSmartphones()) {
 							if(smatphoneState.getImei().equals(imei)) {
 								switch(smatphoneState.getState()) {
 									case UNINSTALL:
@@ -405,9 +405,9 @@ public class BigSenseUpdater {
 			//Update appInfo of this phone
 			List<AppVersion> apps = new ArrayList<>();
 			for(AppVersion app : versionManagement.getApps()) {
-                List<State> smartphones = new ArrayList<>();
+                List<DeployedSmartphoneStatus> smartphones = new ArrayList<>();
                      
-                for(State smatphoneState : app.getSmartphones()) {
+                for(DeployedSmartphoneStatus smatphoneState : app.getSmartphones()) {
                     if(smatphoneState.getImei().equals(imei)) {
                         boolean add = true;
                         switch(smatphoneState.getState()) {
@@ -421,7 +421,7 @@ public class BigSenseUpdater {
                             case UPTODATE: 
                                 break;
                         }
-                        if(add) smartphones.add(new State(imei, SmartphoneState.UPTODATE, System.currentTimeMillis()));
+                        if(add) smartphones.add(new DeployedSmartphoneStatus(imei, SmartphoneState.UPTODATE, System.currentTimeMillis()));
                     }
                     else smartphones.add(smatphoneState);
                 }

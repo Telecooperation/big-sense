@@ -1,4 +1,4 @@
-package de.orolle.bigsense.server.webui;
+package de.orolle.bigsense.server.util;
 
 import java.io.IOException;
 import java.io.InputStream;

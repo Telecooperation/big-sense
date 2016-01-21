@@ -1,7 +1,6 @@
 de.orolle.bigsense.server
 de.orolle.bigsense.server.database
 de.orolle.bigsense.server.devicemgmt
-de.orolle.bigsense.server.http
 de.orolle.bigsense.server.ssh
 de.orolle.bigsense.server.update
 de.orolle.bigsense.server.util

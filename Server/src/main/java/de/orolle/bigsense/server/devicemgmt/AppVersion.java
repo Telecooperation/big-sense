@@ -29,7 +29,7 @@ public class AppVersion {
 	private long lastChange;
 	
 	/** The smartphones. */
-	private List<State> smartphones;
+	private List<DeployedSmartphoneStatus> smartphones;
 	
 	/** The groups. */
 	private List<String> groups;
@@ -45,7 +45,7 @@ public class AppVersion {
 	 * @param smartphones the smartphones
 	 * @param groups the groups
 	 */
-	public AppVersion(int id, String packageName, String fileName, String config, long lastChange, List<State> smartphones, List<String> groups) {
+	public AppVersion(int id, String packageName, String fileName, String config, long lastChange, List<DeployedSmartphoneStatus> smartphones, List<String> groups) {
 		super();
 		this.id = id;
 		this.packageName = packageName;
@@ -71,7 +71,7 @@ public class AppVersion {
 		this.lastChange = Long.valueOf(values[4]);
 		this.smartphones = new ArrayList<>();
 		for(int i = 5; i < values.length; i = i+3) {
-			smartphones.add(new State(values[i], 
+			smartphones.add(new DeployedSmartphoneStatus(values[i], 
 					SmartphoneState.valueOf(Integer.valueOf(values[i+1])), 
 					Long.valueOf(values[i+2])));
 		}
@@ -89,7 +89,7 @@ public class AppVersion {
 	 */
 	public String toString() {
 		String output = this.id + ";" + this.packageName + ";" + this.fileName + ";" + this.config + ";" + this.lastChange;
-		for(State state : smartphones) {
+		for(DeployedSmartphoneStatus state : smartphones) {
 			output += ";" + state.getImei() + ";" + state.getState().getValue() + ";" + state.getLastRestart();
 		}
 		output += ":";
@@ -139,7 +139,7 @@ public class AppVersion {
 	 *
 	 * @return the smartphones
 	 */
-	public List<State> getSmartphones() {
+	public List<DeployedSmartphoneStatus> getSmartphones() {
 		return smartphones;
 	}
 	
@@ -200,7 +200,7 @@ public class AppVersion {
 	 *
 	 * @param smartphones the new smartphones
 	 */
-	public void setSmartphones(List<State> smartphones) {
+	public void setSmartphones(List<DeployedSmartphoneStatus> smartphones) {
 		this.smartphones = smartphones;
 	}
 	
@@ -231,7 +231,7 @@ public class AppVersion {
 		out.add("<h4>" + packageName.replace(".", ". ") + "</h4>");
 		out.add("<h4>" + sdf.format(resultdate) + "</h4>");
 		
-		List<State> phonesToShow = new ArrayList<>();
+		List<DeployedSmartphoneStatus> phonesToShow = new ArrayList<>();
 		String inAppGroups = "<h4>";
 		String notInAppGroups = "<h4>";
 		
@@ -266,7 +266,7 @@ public class AppVersion {
 		out.add(notInAppGroups);
 		
 		//Print all smartphones, which aren't belonging to any group
-		for(State phone : smartphones) {
+		for(DeployedSmartphoneStatus phone : smartphones) {
 			boolean phoneContainsToAnyGroup = false;
 			for(String groupString : groups) {
 				for (Group group : allGroups) {
@@ -279,7 +279,7 @@ public class AppVersion {
 		
 		//add a own table for all involved phones
 		String phonesTable = "<table width=\"100%\"> <thead><tr><th>Phone</th><th>Last Restart</th><th>Status</th></tr></thead><tbody>";
-		for(State state : phonesToShow) {
+		for(DeployedSmartphoneStatus state : phonesToShow) {
 			resultdate = new Date(state.getLastRestart());
 			//get the right name of this phone
 			String phoneName = "";

@@ -1,18 +1,17 @@
 package de.orolle.bigsense.server.devicemgmt;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class State.
  */
-public class State {
+public class DeployedSmartphoneStatus {
 	
 	/** The imei. */
 	private String imei;
 	
+	/** The state. */
 	//0: Smartphone runs this app actually, but it won't in the future
 	//1: Smartphone has to install this app
 	//2: Smartphone has to update the app
-	/** The state. */
 	//3: smartphone is up to date
 	private SmartphoneState state;
 	
@@ -35,7 +34,7 @@ public class State {
 	 * @param state the state
 	 * @param lastRestart the last restart
 	 */
-	public State(String imei, SmartphoneState state, long lastRestart) {
+	public DeployedSmartphoneStatus(String imei, SmartphoneState state, long lastRestart) {
 		super();
 		this.imei = imei;
 		this.state = state;

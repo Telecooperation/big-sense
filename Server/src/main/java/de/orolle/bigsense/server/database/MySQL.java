@@ -18,7 +18,7 @@ import de.orolle.bigsense.server.devicemgmt.AppVersion;
 import de.orolle.bigsense.server.devicemgmt.Group;
 import de.orolle.bigsense.server.devicemgmt.Smartphone;
 import de.orolle.bigsense.server.devicemgmt.SmartphoneState;
-import de.orolle.bigsense.server.devicemgmt.State;
+import de.orolle.bigsense.server.devicemgmt.DeployedSmartphoneStatus;
 
 public class MySQL {
 	
@@ -33,7 +33,7 @@ public class MySQL {
 
 	/**
 	 * Singleton for this SQLServer-Connection
-	 * @return
+	 * @return the already created or newly created instance
 	 */
 	public static MySQL getInstance() {
 		if(instance == null) {
@@ -170,7 +170,7 @@ public class MySQL {
 	
 	/**
 	 * Searches all groups and its corresponding phones in db
-	 * @return
+	 * @return All Available Groups
 	 */
 	public List<Group> getAllGroups() {
 		ArrayList<Group> out = new ArrayList<>();
@@ -207,7 +207,7 @@ public class MySQL {
 	
 	/**
 	 * Sets the given groups in db; updates existing ones, adding new ones and deletes old ones
-	 * @param phones
+	 * @param groups 
 	 */
 	public void setAllGroups(List<Group> groups) {
 		try {
@@ -308,11 +308,11 @@ public class MySQL {
 				long lastChange = resultSet.getLong("lastchange");
 				
 				//get all phones, which run this app
-				ArrayList<State> phoneStates = new ArrayList<>();
+				ArrayList<DeployedSmartphoneStatus> phoneStates = new ArrayList<>();
 				statement = connect.createStatement();
 				resultSet = statement.executeQuery("Select imei, lastrestart, state From AppPhoneStates Where AVID = '" + appIDs.get(i) + "'");
 				while (resultSet.next()) {
-					phoneStates.add(new State(resultSet.getString("imei"), 
+					phoneStates.add(new DeployedSmartphoneStatus(resultSet.getString("imei"), 
 							SmartphoneState.valueOf(resultSet.getInt("state")), 
 							resultSet.getLong("lastrestart")));
 				}
@@ -470,6 +470,10 @@ public class MySQL {
 		}
 	}
 	
+	/**
+	 * Searches the last 30 logs in db
+	 * @return logs with timestamp and log itself grouped in a JsonArray
+	 */
 	public JsonArray getLogs() {
 		JsonArray out = new JsonArray();
 		try {

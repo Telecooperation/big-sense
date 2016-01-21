@@ -24,17 +24,17 @@ import de.orolle.bigsense.server.devicemgmt.AppVersion;
 import de.orolle.bigsense.server.devicemgmt.Group;
 import de.orolle.bigsense.server.devicemgmt.Smartphone;
 import de.orolle.bigsense.server.devicemgmt.SmartphoneState;
-import de.orolle.bigsense.server.devicemgmt.State;
+import de.orolle.bigsense.server.devicemgmt.DeployedSmartphoneStatus;
 import de.orolle.bigsense.server.devicemgmt.VersionManagement;
+import de.orolle.bigsense.server.util.DecodeAndroidManifest;
 
 /**
- * Manages APK upload and delete for web-interface.
- * Notifies web-interfaces about apk changes.
+ * Manages all web-interfce interactions.
  * 
  * @author Oliver Rolle, Martin Hellwig
  *
  */
-public class APKManager {
+public class WebinterfaceManager {
 	
 	/** Vertx instance. */
 	public final Vertx vertx;
@@ -52,12 +52,12 @@ public class APKManager {
 	private VersionManagement versionMgmt;
 
 	/**
-	 * Constructs APKManager.
+	 * Constructs WebinterfaceManager.
 	 *
 	 * @param v 	Vert.x instance for FileSystem and Eventbus API
 	 * @param a 	Folder to store APKs in
 	 */
-	public APKManager(Vertx v, String a) {
+	public WebinterfaceManager(Vertx v, String a) {
 		super();
 		this.vertx = v;
 		this.apkFolder = a;
@@ -124,10 +124,10 @@ public class APKManager {
 						List<AppVersion> newApps = new ArrayList<>();
 						for(AppVersion app : versionMgmt.getApps()) {
 							if(app.getPackageName().equals(packageName)) {
-								List<State> phones = new ArrayList<>();
-								for(State phone : app.getSmartphones()) {
+								List<DeployedSmartphoneStatus> phones = new ArrayList<>();
+								for(DeployedSmartphoneStatus phone : app.getSmartphones()) {
 									if(!phone.getState().equals(SmartphoneState.INSTALL)) 
-										phones.add(new State(phone.getImei(), SmartphoneState.UNINSTALL, phone.getLastRestart()));
+										phones.add(new DeployedSmartphoneStatus(phone.getImei(), SmartphoneState.UNINSTALL, phone.getLastRestart()));
 								}
 								app.setSmartphones(phones);
 								app.setGroups(new ArrayList<String>());
@@ -160,19 +160,19 @@ public class APKManager {
 							
 							for(Group group : versionMgmt.getGroups()) {
 								if(group.getName().equals(groupName)) {
-									List<State> newPhones = new ArrayList<>();
-									for(State phone : app.getSmartphones()) {
+									List<DeployedSmartphoneStatus> newPhones = new ArrayList<>();
+									for(DeployedSmartphoneStatus phone : app.getSmartphones()) {
 										if(!group.getImeis().contains(phone.getImei())) {
 											newPhones.add(phone);
 										} 
-										else newPhones.add(new State(phone.getImei(), SmartphoneState.UPDATE, System.currentTimeMillis()));
+										else newPhones.add(new DeployedSmartphoneStatus(phone.getImei(), SmartphoneState.UPDATE, System.currentTimeMillis()));
 									}
 									for(String imei : group.getImeis()) {
 										boolean isAlreadyInList = false;
-										for(State phone : app.getSmartphones()) {
+										for(DeployedSmartphoneStatus phone : app.getSmartphones()) {
 											if(phone.getImei().equals(imei)) isAlreadyInList = true;
 										}
-										if(!isAlreadyInList) newPhones.add(new State(imei, SmartphoneState.INSTALL, System.currentTimeMillis()));
+										if(!isAlreadyInList) newPhones.add(new DeployedSmartphoneStatus(imei, SmartphoneState.INSTALL, System.currentTimeMillis()));
 									}
 									app.setSmartphones(newPhones);
 								}
@@ -199,13 +199,13 @@ public class APKManager {
 							
 							for(Group group : versionMgmt.getGroups()) {
 								if(group.getName().equals(groupName)) {
-									List<State> phones = new ArrayList<>();
-									for(State phone : app.getSmartphones()) {
+									List<DeployedSmartphoneStatus> phones = new ArrayList<>();
+									for(DeployedSmartphoneStatus phone : app.getSmartphones()) {
 										if(group.getImeis().contains(phone.getImei())) {
 											if(phone.getState() == SmartphoneState.UNINSTALL || 
 													phone.getState() == SmartphoneState.UPDATE || 
 													phone.getState() == SmartphoneState.UPTODATE)
-												phones.add(new State(phone.getImei(), SmartphoneState.UNINSTALL, phone.getLastRestart()));
+												phones.add(new DeployedSmartphoneStatus(phone.getImei(), SmartphoneState.UNINSTALL, phone.getLastRestart()));
 										}
 										else phones.add(phone);
 									}
@@ -238,17 +238,17 @@ public class APKManager {
 					List<AppVersion> newApps = new ArrayList<>();
 					for(AppVersion app : versionMgmt.getApps()) {
 						if(app.getGroups().contains(groupName)) {
-							List<State> newPhones = new ArrayList<>();
+							List<DeployedSmartphoneStatus> newPhones = new ArrayList<>();
 							boolean foundPhoneAlready = false;
-							for(State phone : app.getSmartphones()) {
+							for(DeployedSmartphoneStatus phone : app.getSmartphones()) {
 								if(phone.getImei().equals(imei)) {
-									newPhones.add(new State(imei, SmartphoneState.UPDATE, System.currentTimeMillis()));
+									newPhones.add(new DeployedSmartphoneStatus(imei, SmartphoneState.UPDATE, System.currentTimeMillis()));
 									foundPhoneAlready = true;
 								}
 								else newPhones.add(phone);
 							}
 							
-							if(!foundPhoneAlready) newPhones.add(new State(imei, SmartphoneState.INSTALL, System.currentTimeMillis()));
+							if(!foundPhoneAlready) newPhones.add(new DeployedSmartphoneStatus(imei, SmartphoneState.INSTALL, System.currentTimeMillis()));
 							app.setSmartphones(newPhones);
 							newApps.add(app);
 						}
@@ -279,10 +279,10 @@ public class APKManager {
 					List<AppVersion> newApps = new ArrayList<>();
 					for(AppVersion app : versionMgmt.getApps()) {
 						if(app.getGroups().contains(groupName)) {
-							List<State> newPhones = new ArrayList<>();
-							for(State phone : app.getSmartphones()) {
+							List<DeployedSmartphoneStatus> newPhones = new ArrayList<>();
+							for(DeployedSmartphoneStatus phone : app.getSmartphones()) {
 								if(phone.getImei().equals(imei)) {
-									if(phone.getState() != SmartphoneState.INSTALL) newPhones.add(new State(imei, SmartphoneState.UNINSTALL, System.currentTimeMillis()));
+									if(phone.getState() != SmartphoneState.INSTALL) newPhones.add(new DeployedSmartphoneStatus(imei, SmartphoneState.UNINSTALL, System.currentTimeMillis()));
 								}
 								else newPhones.add(phone);
 							}
@@ -302,13 +302,13 @@ public class APKManager {
 					List<AppVersion> newApps = new ArrayList<>();
 					for(AppVersion app : versionMgmt.getApps()) {
 						if(app.getGroups().contains(groupName)) {
-							List<State> newPhones = new ArrayList<>();
-							for(State phone : app.getSmartphones()) {
+							List<DeployedSmartphoneStatus> newPhones = new ArrayList<>();
+							for(DeployedSmartphoneStatus phone : app.getSmartphones()) {
 								boolean foundPhoneInDeletingGroup = false;
 								for(Group group : versionMgmt.getGroups()) {
 									if(group.getName().equals(groupName) && group.getImeis().contains(phone.getImei())) {
 										foundPhoneInDeletingGroup = true;
-										if(phone.getState() != SmartphoneState.INSTALL) newPhones.add(new State(phone.getImei(), 
+										if(phone.getState() != SmartphoneState.INSTALL) newPhones.add(new DeployedSmartphoneStatus(phone.getImei(), 
 												SmartphoneState.UNINSTALL, 
 												System.currentTimeMillis()));
 									}
@@ -387,7 +387,7 @@ public class APKManager {
 					for (AppVersion app : oldApps) {
 						boolean changePhones = false;
 						int removeIndex = 0;
-						List<State> imeis = app.getSmartphones();
+						List<DeployedSmartphoneStatus> imeis = app.getSmartphones();
 						for(int i = 0; i < imeis.size(); i++) {
 							if(imeis.get(i).getImei().equals(imei)) {
 								changePhones = true;
@@ -420,10 +420,10 @@ public class APKManager {
 							tempApp.setConfig(config);
 							Date now = new Date();
 							tempApp.setLastChange(now.getTime());
-							ArrayList<State> newPhones = new ArrayList<>();
-							for(State phone : tempApp.getSmartphones()) {
+							ArrayList<DeployedSmartphoneStatus> newPhones = new ArrayList<>();
+							for(DeployedSmartphoneStatus phone : tempApp.getSmartphones()) {
 								if(phone.getState().equals(SmartphoneState.UPTODATE)) {
-									newPhones.add(new State(phone.getImei(), SmartphoneState.UPDATE, phone.getLastRestart()));
+									newPhones.add(new DeployedSmartphoneStatus(phone.getImei(), SmartphoneState.UPDATE, phone.getLastRestart()));
 								}
 								else newPhones.add(phone);
 							}
@@ -555,10 +555,10 @@ public class APKManager {
 					tempApp.setFileName(filename);
 					tempApp.setLastChange(System.currentTimeMillis());
 					
-					List<State> phones = new ArrayList<>();
-					for(State phone : app.getSmartphones()) {
+					List<DeployedSmartphoneStatus> phones = new ArrayList<>();
+					for(DeployedSmartphoneStatus phone : app.getSmartphones()) {
 						if(phone.getState() == SmartphoneState.UPTODATE) 
-							phones.add(new State(phone.getImei(), SmartphoneState.UPDATE, phone.getLastRestart()));
+							phones.add(new DeployedSmartphoneStatus(phone.getImei(), SmartphoneState.UPDATE, phone.getLastRestart()));
 						else phones.add(phone);
 					}
 					
@@ -570,7 +570,7 @@ public class APKManager {
 			}
 			
 			if(!foundExistingApp) {
-				newApps.add(new AppVersion(0, packageName, filename, config, System.currentTimeMillis(), new ArrayList<State>(), new ArrayList<String>()));
+				newApps.add(new AppVersion(0, packageName, filename, config, System.currentTimeMillis(), new ArrayList<DeployedSmartphoneStatus>(), new ArrayList<String>()));
 			}
 			versionMgmt.setApps(newApps);
 	

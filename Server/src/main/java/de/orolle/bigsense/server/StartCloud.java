@@ -10,7 +10,6 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.http.HttpServer;
-import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
@@ -20,12 +19,10 @@ import org.vertx.java.core.streams.Pump;
 import org.vertx.java.platform.Verticle;
 
 import de.orolle.bigsense.server.database.MySQL;
-import de.orolle.bigsense.server.http.FileUpload;
-import de.orolle.bigsense.server.http.NetworkEndpoint;
 import de.orolle.bigsense.server.ssh.SSHVerticle;
 import de.orolle.bigsense.server.update.BigSenseUpdater;
 import de.orolle.bigsense.server.util.Parallel;
-import de.orolle.bigsense.server.webui.APKManager;
+import de.orolle.bigsense.server.webui.WebinterfaceManager;
 
 /**
  * Main for BigSenseWeb. It is executed as Vert.x has loaded this class and than instantiates it.
@@ -39,9 +36,6 @@ public class StartCloud extends Verticle {
 	 * Vert.x logger
 	 */
 	public static Logger log;
-
-	/** File System Folders for smart phone files. */
-	private String fileWriterPath = null;
 	
 	/** File System Folders for apk files. */
 	private String apkWriterPath = null;
@@ -84,7 +78,6 @@ public class StartCloud extends Verticle {
 		authAddress = "vertx.basicauthmanager";
 		sshClientAddress = "ssh.client."+UUID.randomUUID();
 		
-		fileWriterPath = container.config().getString("filedata_folder", Config.USER_HOME_PATH + "BigSenseCloud/");
 		apkWriterPath = container.config().getString("apkdata_folder", Config.USER_HOME_PATH + "BigSense/apk/");
 		
 		/*
@@ -140,29 +133,18 @@ public class StartCloud extends Verticle {
 		 * Web UI Functionality
 		 * Intermediation between UI and apk, app deployment / updates
 		 */
-		new APKManager(getVertx(), apkWriterPath);
+		new WebinterfaceManager(getVertx(), apkWriterPath);
 		
 		/*
 		 * BigSense internal webserver Deployment
 		 * data collector for smartphones
 		 */
-		final Handler<AsyncResult<? extends Object>> interalWeb = deploy.handler();
+		final Handler<AsyncResult<? extends Object>> internalWeb = deploy.handler();
 		vertx.createHttpServer()
-		.requestHandler(new Handler<HttpServerRequest>() {
-			public void handle(HttpServerRequest req) { // HTTP Get & Post
-				if (req.path().equals("/NetworkEndpoint")) {
-					new NetworkEndpoint(vertx, req);
-				} else if(req.path().equals("/File")){
-					new FileUpload(vertx, req, fileWriterPath);
-				} else {
-					req.response().end();
-				}
-			}
-		})
 		.listen(Config.HTTP_INTERNAL_PORT, new Handler<AsyncResult<HttpServer>>() {
 			@Override
 			public void handle(AsyncResult<HttpServer> event) {
-				interalWeb.handle(event);
+				internalWeb.handle(event);
 			}
 		});
 		
