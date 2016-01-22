@@ -10,6 +10,7 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.http.HttpServer;
+import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
@@ -141,6 +142,11 @@ public class StartCloud extends Verticle {
 		 */
 		final Handler<AsyncResult<? extends Object>> internalWeb = deploy.handler();
 		vertx.createHttpServer()
+		.requestHandler(new Handler<HttpServerRequest>() {
+			public void handle(HttpServerRequest req) { // HTTP Get & Post
+				req.response().end();
+			}
+		})
 		.listen(Config.HTTP_INTERNAL_PORT, new Handler<AsyncResult<HttpServer>>() {
 			@Override
 			public void handle(AsyncResult<HttpServer> event) {
