@@ -477,9 +477,9 @@ public class WebinterfaceManager {
 		// Notify about files
 		JsonArray files = new JsonArray();
 		for (AppVersion app : versionMgmt.getApps()) {
-			files.add(new JsonObject().putString("filename", app.getFileName()));
+			files.add(new JsonObject().putString("filename", app.getFileName()).putString("installations", "" + app.getSmartphones().size()));
 		}
-		vertx.eventBus().publish("web.out.apk", new JsonObject().putString("action", "files changed").putArray("files", files));
+		vertx.eventBus().publish("web.out.apk", new JsonObject().putArray("files", files));
 
 		// Notify about saved apps (not apks)
 		JsonArray apps = new JsonArray();

@@ -107,16 +107,15 @@ var mongoWindow = null;
   
 function onLogin(){
   eb.register("web.out.apk", function(msg){
-    if(msg.action === "files changed"){
-      var files = msg.files;
+  	var files = msg.files;
       
-      for(var i = 0, f; f = files[i]; i++){
-        files[i]["delete"] = "<a style=\"color:red;\" href='#' onclick=deleteApk('"+f.filename+"')>Delete</a>"
-        files[i]["filename"] = "<h4>" + files[i]["filename"] + "</h4>";
-      }
-      
-      big.vis.tabulate("apks", files, ["<h3>APK-Files</h3>","<h3>Actions</h3>"]);
+    for(var i = 0, f; f = files[i]; i++){
+      files[i]["delete"] = "<a style=\"color:red;\" href='#' onclick=deleteApk('"+f.filename+"')>Delete</a>"
+      files[i]["installations"] = "<h4>" + files[i]["installations"] + "</h4>";
+      files[i]["filename"] = "<h4>" + files[i]["filename"] + "</h4>";
     }
+      
+    big.vis.tabulate("apks", files, ["<h3>APK-Files</h3>","<h3>Active Installations</h3>","<h3>Actions</h3>"]);
   });
   
   big.vis.tabulate("upload", upload, ["<h3>Upload APKs</h3>"]);
