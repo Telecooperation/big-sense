@@ -1,0 +1,1 @@
+{"api_url":"coolURL", "auth_pw": "coolPW", "api_port":80, "min_gps_update_interval_sec":5, "min_gps_update_distance_meter":20, "measurement_interval_sec":10, "upload_interval_sec":300, "only_measure_while_moving": true}

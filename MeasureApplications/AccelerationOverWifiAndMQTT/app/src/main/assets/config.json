@@ -1,0 +1,1 @@
+{"broker_port":"1883", "topic":"accelerometer", "wlan_ssid":"test", "wlan_password":"testtest", "send_interval_msec":1000}
