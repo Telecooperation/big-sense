@@ -1,0 +1,6 @@
+{
+  "name": "BigSense",
+  "tagline": "BigSense",
+  "body": "# BigSense - Overview\r\n\r\nBigSense is a platform, which consists of a server application and a Android application. With the help of this platform you can use phones as sensor nodes, which need no human interaction directly on the phone. You deploy the BigSense-Application on the phone and this needs only a connection to the server (WiFi or 3G) and power. With the server application you can now upload your Android measuring/sensing applications and deploy them on your phones. Within a specified time all assigned phones run the new app without any further interaction.\r\n\r\nThe server application is in the folder \"Server\". The BigSense application is in the folder \"BigSenseApp\". And we also provide an example application, which simply runs a service.\r\n",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}
